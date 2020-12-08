@@ -1,0 +1,43 @@
+name: Release NDK library for Android
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build_native:
+    name: Build depends native library
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_NDK_HOME: /opt/android-ndk
+      ANDROID_NDK_VERSION: r21d
+    strategy:
+      matrix:
+        config:
+          - { target: aarch64-linux-android, name: arm64-v8a }
+          - { target: armv7-linux-androideabi, name: armeabi-v7a }
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install NDK
+        shell: bash
+        run: mkdir /opt/android-ndk-tmp && cd /opt/android-ndk-tmp && wget -q https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_VERSION}-linux-x86_64.zip && unzip -q android-ndk-${ANDROID_NDK_VERSION}-linux-x86_64.zip && mv ./android-ndk-${ANDROID_NDK_VERSION} ${ANDROID_NDK_HOME} && cd ${ANDROID_NDK_HOME} && rm -rf /opt/android-ndk-tmp
+
+      - name: Build project using NDK
+        run: |
+          /opt/android-ndk/ndk-build clean
+          rm -Rf libs/ obj/
+          /opt/android-ndk/ndk-build V=1 APP_ABI=${{ matrix.cfg.target }}
+          rm -Rf obj/
+        working-directory: .
+        
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: libhello-jni-${{ matrix.cfg.name }}.so
+          path: obj/local/${{ matrix.cfg.target }}/libhello-jni.so
