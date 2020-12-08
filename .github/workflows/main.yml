@@ -32,12 +32,11 @@ jobs:
         run: |
           /opt/android-ndk/ndk-build clean
           rm -Rf libs/ obj/
-          /opt/android-ndk/ndk-build V=1 APP_ABI=${{ matrix.cfg.target }}
-          rm -Rf obj/
+          /opt/android-ndk/ndk-build V=1 APP_ABI=${{ matrix.config.target }}
         working-directory: .
         
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: libhello-jni-${{ matrix.cfg.name }}.so
-          path: obj/local/${{ matrix.cfg.target }}/libhello-jni.so
+          name: libhello-jni-${{ matrix.config.name }}.so
+          path: obj/local/${{ matrix.config.target }}/libhello-jni.so
